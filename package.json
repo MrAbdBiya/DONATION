@@ -1,21 +1,26 @@
 {
-  "name": "donation-platform-master-cca",
-  "version": "1.0.0",
-  "description": "Plateforme de collecte de dons pour le buffet de soutenance du Master CCA Beni Mellal",
-  "main": "server.js",
+  "name": "mediqueuepro",
+  "private": true,
+  "version": "0.1.0",
+  "description": "MediQueuePro monorepo containing the medical cabinet management frontend and backend.",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "echo 'Build completed'"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm --workspace @mediqueuepro/backend run dev",
+    "dev:frontend": "npm --workspace @mediqueuepro/frontend run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "npm --workspace @mediqueuepro/backend run build",
+    "build:frontend": "npm --workspace @mediqueuepro/frontend run build",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "npm --workspace @mediqueuepro/backend run lint",
+    "lint:frontend": "npm --workspace @mediqueuepro/frontend run lint",
+    "format": "prettier --write ."
   },
   "devDependencies": {
-    "nodemon": "^3.0.3"
-  },
-  "engines": {
-    "node": ">=14.0.0"
+    "concurrently": "^8.2.2",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5"
   }
-} 
+}
