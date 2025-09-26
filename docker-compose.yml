@@ -1,0 +1,43 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mediqueuepro
+      POSTGRES_USER: mediqueuepro
+      POSTGRES_PASSWORD: mediqueuepro
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://mediqueuepro:mediqueuepro@db:5432/mediqueuepro?schema=public
+      JWT_SECRET: super-secret-development-key
+      REFRESH_TOKEN_SECRET: super-secret-refresh-key
+      PORT: 4000
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

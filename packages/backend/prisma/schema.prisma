@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  phone         String?
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          UserRole
+  createdAt     DateTime @default(now())
+  isActive      Boolean  @default(true)
+  patient       Patient?
+  doctor        Doctor?
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+}
+
+model Patient {
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id])
+  dateOfBirth  DateTime
+  address      String?
+  bloodType    String?
+  allergies    String[]
+  appointments Appointment[]
+}
+
+model Doctor {
+  id             String        @id @default(uuid())
+  userId         String        @unique
+  user           User          @relation(fields: [userId], references: [id])
+  licenseNumber  String        @unique
+  specializations String[]
+  schedules      Schedule[]
+  appointments   Appointment[]
+}
+
+model Appointment {
+  id            String         @id @default(uuid())
+  patientId     String
+  doctorId      String
+  scheduledDate DateTime
+  queueNumber   Int?
+  status        AppointmentStatus @default(PENDING)
+  reason        String?
+  createdAt     DateTime @default(now())
+  patient       Patient @relation(fields: [patientId], references: [id])
+  doctor        Doctor  @relation(fields: [doctorId], references: [id])
+  prescription  Prescription?
+  queueEntry    QueueEntry?
+}
+
+model Prescription {
+  id            String   @id @default(uuid())
+  appointmentId String   @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  diagnosis     String
+  medications   Json
+  instructions  String
+  createdAt     DateTime @default(now())
+}
+
+model Schedule {
+  id           String   @id @default(uuid())
+  doctorId     String
+  doctor       Doctor   @relation(fields: [doctorId], references: [id])
+  date         DateTime
+  workingSlots String[]
+  blockedSlots String[]
+  @@unique([doctorId, date])
+}
+
+model QueueEntry {
+  id            String      @id @default(uuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  queueNumber   Int
+  estimatedTime Int
+  status        QueueStatus @default(WAITING)
+  createdAt     DateTime    @default(now())
+}
+
+model Notification {
+  id       String            @id @default(uuid())
+  userId   String
+  user     User              @relation(fields: [userId], references: [id])
+  title    String
+  message  String
+  type     NotificationType
+  isRead   Boolean           @default(false)
+  sentAt   DateTime          @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  NURSE
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum QueueStatus {
+  WAITING
+  CALLED
+  IN_PROGRESS
+  DONE
+  SKIPPED
+}
+
+enum NotificationType {
+  APPOINTMENT
+  QUEUE
+  PRESCRIPTION
+  SYSTEM
+}
